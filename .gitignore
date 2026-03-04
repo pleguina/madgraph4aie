@@ -1,0 +1,147 @@
+# ==============================================================================
+# .gitignore — Vitis/AIE Packet-Switched Matrix Element Computation
+# Tailored for: VCK190 AIE + HLS + Host App + System Project
+# ==============================================================================
+
+# ── Quarantine (removed artifacts, not for Git) ──────────────────────────────
+_quarantine/
+
+# ── Vitis / Vivado / AIE build outputs ───────────────────────────────────────
+**/build/
+!/docs/build/
+export/
+.Xil/
+*.log
+*.jou
+*.str
+*.rpt
+*.wdb
+*.vcd
+*.wcfg
+*.pb
+*.cache/
+*.runs/
+.tmp/
+_x/
+.ipcache/
+sd_card/
+sd_card.img
+*.xpe
+
+# ── AIE-specific ─────────────────────────────────────────────────────────────
+Work/
+Work2/
+aiesimulator_output/
+x86simulator_output/
+function_wdb_dir/
+trdata.aiesim/
+aiesim_xpe/
+*.aiesol
+libadf.a
+*.ir
+
+# ── HLS outputs ──────────────────────────────────────────────────────────────
+*/*/hls/
+*/*/logs/
+*/*/reports/
+*.xo
+*.hlscompile_summary
+*.hlsrun_csim_summary
+*.hlsrun_package_summary
+
+# ── Linked / packaged binaries ───────────────────────────────────────────────
+*.xclbin
+*.xsa
+*.xclbin.info
+BOOT.BIN
+boot.scr
+Image
+host.exe
+a.xclbin
+
+# ── Deploy bundles ───────────────────────────────────────────────────────────
+deploy_*/
+
+# ── CMake (generated) ────────────────────────────────────────────────────────
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+# Note: host_app/Makefile is hand-written, NOT CMake-generated — do not ignore
+
+# ── IDE / editor artifacts ───────────────────────────────────────────────────
+_ide/
+.cache/
+.vscode/
+.theia/
+.wsdata/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Object files / libraries ────────────────────────────────────────────────
+*.o
+*.d
+*.a
+*.so
+*.elf
+
+# ── Binary data & platform images ───────────────────────────────────────────
+*.bin
+*.pdi
+*.dcp
+*.bit
+*.cdo
+*.dtb
+
+# ── Whitelist: small test data ───────────────────────────────────────────────
+!host_app/data/*.bin
+
+# ── Vitis workspace metadata ────────────────────────────────────────────────
+.lock
+.peers.ini
+.repo.yaml
+.vitisWorkspace.json
+
+# ── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# ── LaTeX build outputs ─────────────────────────────────────────────────────
+paper/**/*.aux
+paper/**/*.bbl
+paper/**/*.blg
+paper/**/*.fdb_latexmk
+paper/**/*.fls
+paper/**/*.out
+paper/**/*.synctex.gz
+paper/**/*.toc
+
+# ── Logs directory ───────────────────────────────────────────────────────────
+logs/
+
+# ── OS artifacts ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Excluded docs (kept on disk, not tracked) ───────────────────────────────
+docs/analysis/FFV1P0_3_OPTIMIZATION.md
+docs/analysis/FINE_GRAINED_PIPELINE_ANALYSIS.md
+docs/analysis/HELICITY_OPTIMIZATION_REPORT.md
+docs/analysis/HLS_CORES_EVALUATION.md
+docs/analysis/PACKET_SWITCHING_FEASIBILITY_ANALYSIS.md
+docs/analysis/PARALLELIZATION_ANALYSIS.md
+docs/analysis/PLIO_CHANNELS_ANALYSIS.md
+docs/analysis/STREAM_TOPOLOGY_ANALYSIS_GUIDE.md
+docs/architecture/END_TO_END_ARCHITECTURE_PS_PL_AIE.md
+docs/architecture/SCALABLE_ARCHITECTURE_80_PIPELINES.md
+docs/benchmarking/MAX_THROUGHPUT_ANALYSIS.md
+docs/benchmarking/OPTIMIZATION_REPORT.md
+docs/deploy/DEPLOYMENT_READY.md
+docs/reference/
+docs/troubleshooting/
+docs/validation/5K_SPLIT_PHYSICS_VERIFICATION.md
+docs/validation/PHYSICS_ANALYSIS.md

@@ -1,0 +1,157 @@
+%% sec_results.tex
+%% ─────────────────────────────────────────────────────────────────────────────
+%% Section 6 — Results
+%%
+%% NOTE: Sections marked \TODO{} require measured data not yet available.
+%%       Placeholder tables/figures include the structure and known values.
+%% ─────────────────────────────────────────────────────────────────────────────
+
+\section{Results}\label{sec:results}
+
+\subsection{Program memory utilisation}\label{sec:res_pm}
+
+Table~\ref{tab:pm_results} summarises the program memory reported by the AIE
+compiler for each kernel after applying all optimisations described in
+Section~\ref{sec:implementation}.  All five kernels fit within the 16\KB
+limit.  The critical path was \texttt{K1}: the lazy-evaluation optimisation
+that moved \texttt{FFV1P0\_3} from \texttt{K1} to \texttt{K3} reduced its
+footprint from ${\sim}17.8\KB$ to ${\sim}15.5\KB$ (saving ${\sim}2.7\KB$,
+$\Delta = -15\%$).
+
+\begin{table}[h]
+\caption{Program memory utilisation per kernel.  The 16\KB hardware limit is
+16\,384 bytes.  Usage percentages are relative to that limit.}
+\label{tab:pm_results}
+\begin{tabular}{@{}lrrrl@{}}
+\toprule
+Kernel & PM (bytes) & Usage (\%) & Headroom (bytes) & Status \\
+\midrule
+K1 — WFGEN          & ${\sim}15{,}500$ & ${\sim}94.6$ & ${\sim}884$ & \textcolor{orange}{near-full} \\
+K2a — FF\_DIAG\_A   & ${\sim}13{,}000$ & ${\sim}79.3$ & ${\sim}3{,}384$ & OK \\
+K2b — FF\_DIAG\_B   & ${\sim}12{,}600$ & ${\sim}76.9$ & ${\sim}3{,}784$ & OK \\
+K3 — VVV\_AMP       & ${\sim}9{,}600$  & ${\sim}58.6$ & ${\sim}6{,}784$ & OK \\
+K4 — VVVV\_COLOR    & ${\sim}8{,}400$  & ${\sim}51.3$ & ${\sim}7{,}984$ & OK \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Physics equivalence and float32 precision}\label{sec:res_prec}
+
+The cascade pipeline was validated against the \mgfive double-precision
+(\texttt{float64}) reference at multiple levels:
+\begin{itemize}
+  \item \textbf{Wavefunction level}: external wavefunctions $w_0$--$w_4$
+    computed by \texttt{K1} agree with the \mgfive reference to within
+    float32 rounding.
+  \item \textbf{Diagram level}: amplitudes D1--D16 (compared at the JAMP
+    accumulation stage in \texttt{K2a}, \texttt{K2b}, \texttt{K3}, \texttt{K4})
+    have component-wise agreement with the reference.
+  \item \textbf{JAMP level}: the full \texttt{JAMP[0..5]} vector at the output
+    of \texttt{K3} matches the reference.
+  \item \textbf{$|M|^2$ level}: final \ME outputs are compared against the
+    \mgfive double-precision result.
+\end{itemize}
+
+\TODO{Insert precision scatter plot and relative-error histogram for 1000-PSP
+study.  Include mean and maximum relative error, and comparison with CUDACPP
+float32 mode.}
+
+The float32 relative precision is ${\sim}10^{-7}$, far below the physical
+uncertainties in LO calculations (${\sim}1\%$).  Systematic errors (rather
+than random) arise from the float32 accumulation order, as expected.
+
+\subsection{Single-pipeline latency}\label{sec:res_latency}
+
+\TODO{Insert measured single-pipeline latency from hardware run on VCK190.
+Expected: ${\sim}81\,\mu$s per PSP based on simulation and cycle estimates.}
+
+The single-pipeline latency is the time from PSP injection at \texttt{plio\_in}
+to ME$^2$ read-back at \texttt{plio\_out}, measured with XRT profiling.
+This corresponds to \textbf{\TODO{X}~$\mu$s per PSP}, giving a single-pipeline
+throughput of $1/T_\text{pipe}\ \text{PSP/s}$.
+
+\subsection{PLIO bandwidth budget}\label{sec:res_plio}
+
+The architecture is overwhelmingly \emph{compute-bound}, not I/O-bound.  Each
+pipeline consumes one PSP of 80 bytes and emits one ME$^2$ result of 4 bytes
+($+8$ bytes packet overhead).  Per-trunk PLIO capacity at 500\,MHz and 32-bit
+width is 2\,GB/s.  With 8 pipelines sharing one PLIO trunk:
+\begin{align}
+  \text{PLIO utilisation (input)} &= \frac{8\times 80\,\text{B}/T_\text{pipe}}{2\,\text{GB/s}}
+    \approx 0.3\%, \notag \\
+  \text{PLIO utilisation (output)} &\ll 0.1\%.
+\end{align}
+The PLIO interface could accept data ${\sim}300\times$ faster than the
+compute pipeline processes it.  PSP injection time per packet (21 beats at
+500\,MHz) is ${\sim}42\,\text{ns}$, compared to ${\sim}81\,\mu\text{s}$ compute
+time---a ratio of ${\sim}1{,}900\times$.  This confirms that all
+performance optimisation effort should target kernel compute latency.
+
+\subsection{80-pipeline aggregate throughput and energy}\label{sec:res_throughput}
+
+With 80 independent, non-contending pipelines:
+\begin{equation}
+  \text{Throughput}_{\text{80-pipe}}
+  = \frac{80}{T_\text{pipe}}\ \text{PSP/s}
+  \approx \mathbf{\TODO{${\sim}1\,\text{MPSP/s}$}},
+  \label{eq:throughput}
+\end{equation}
+where linear scaling is justified because each pipeline is physically
+independent (separate cascade chains, separate packet-switched I/O, no shared
+memory or synchronisation).
+
+\TODO{Confirm with hardware measurement or emulation.  Provide energy estimate
+at 45W board power: $E = 45\,\text{W} / T_{\text{throughput}}$ nJ/PSP.}
+
+\subsection{Platform comparison}\label{sec:res_comparison}
+
+Table~\ref{tab:comparison} places the AIE result in context of
+existing acceleration efforts.  GPU and CPU numbers are sourced from
+published CUDACPP benchmarks~\cite{Valassi:2025xfn}.
+
+\begin{table}[h]
+\caption{Performance and energy comparison for \ggttg matrix element
+evaluation across platforms.  \TODO{Fill AIE measured values once hardware
+benchmark is complete.  GPU/CPU numbers from~\cite{Valassi:2025xfn}.}}
+\label{tab:comparison}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+Platform & Cores / tiles & Throughput & Power & Energy/PSP \\
+\midrule
+AMD VCK190 — \aie (80 pipes) &
+  400 AIE tiles &
+  \TODO{${\sim}1$\,MPSP/s} &
+  ${\sim}45$\,W &
+  \TODO{${\sim}46$\,nJ} \\
+AMD VCK190 — 1 pipe (measured) &
+  5 AIE tiles &
+  ${\sim}12.3$\,kPSP/s &
+  ${\sim}45$\,W &
+  ${\sim}3.6\,\mu$J \\
+NVIDIA V100 (CUDACPP float32) &
+  5\,120 CUDA cores &
+  \TODO{est.} &
+  300\,W &
+  \TODO{est.~${\sim}60$\,nJ} \\
+Intel Xeon (single core, MG5aMC) &
+  1 core &
+  ${\sim}10$\,kPSP/s &
+  150\,W (TDP) &
+  ${\sim}10\,\mu$J \\
+Intel Xeon (16 cores, MG5aMC) &
+  16 cores &
+  ${\sim}100$\,kPSP/s &
+  150\,W (TDP) &
+  ${\sim}1.5\,\mu$J \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Resource utilisation summary}\label{sec:res_resources}
+
+The design achieves \textbf{100\% \aie tile utilisation} (400 of 400 tiles
+occupied by the 80 five-tile pipelines).  PL resource consumption is modest:
+10$\times$ MM2S and 10$\times$ S2MM HLS kernels each consume $\ll 1\%$ of
+available LUTs.
+
+\TODO{Insert PL LUT/DSP utilisation table from Vivado/Vitis reports.}

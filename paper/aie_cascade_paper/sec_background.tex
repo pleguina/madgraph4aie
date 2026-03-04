@@ -1,0 +1,62 @@
+%% sec_background.tex
+%% ─────────────────────────────────────────────────────────────────────────────
+%% Section 2 — Background and Related Work
+%% ─────────────────────────────────────────────────────────────────────────────
+
+\section{Background and Related Work}\label{sec:background}
+
+\subsection{MC event generation and the matrix element bottleneck}
+
+Physics event generators model proton collisions by integrating the transition
+probability
+\begin{equation}
+  \mathcal{P}(i\to\mathcal{X})
+  = \left|\mathcal{M}_{i\to\mathcal{X}}\right|^2,
+  \label{eq:me}
+\end{equation}
+over phase space using MC sampling.  The calculation is \emph{embarrassingly
+parallel}: the same \ME evaluation is performed independently for each sampled
+PSP.  Modern generators such as \amcnlo provide automatic generation of the
+amplitude code from Feynman rules via the HELAS
+library~\cite{Murayama:1992gi}, where each diagram corresponds to a sequence
+of wavefunction and vertex calls accumulating into colour-flow amplitude sums
+(\jamp).
+
+\subsection{\ggttg as validation benchmark}\label{sec:process}
+
+We target the \ggttg process at leading order.  \mgfive generates 16 Feynman
+diagrams ($\mathrm{D1}$--$\mathrm{D16}$, where $\mathrm{D16}$ has three
+sub-diagrams via four-gluon contact vertices), 6 colour-flow amplitudes
+($\jamp[0..5]$), and 32 helicity configurations.  The complete HELAS call
+graph involves 10 distinct functions:
+\texttt{ixxxxx}, \texttt{oxxxxx}, \texttt{vxxxxx} (external wavefunctions);
+\texttt{FFV1\_0/1/2}, \texttt{FFV1P0\_3} (fermion--fermion--vector vertices);
+\texttt{VVV1P0\_1}, \texttt{VVV1\_0} (triple-gluon vertices);
+\texttt{VVVV1/3/4P0\_1} (four-gluon contact vertices).
+
+Although the process is relatively compact (5 external particles), it provides
+a demanding PM stress-test: the monolithic kernel implementing all 16 diagrams
+requires ${\sim}38\KB$ of program memory---$2.4\times$ the 16\KB tile limit.
+This makes \ggttg the minimal realistic benchmark for the partitioning
+methodology developed here.
+
+\subsection{GPU and vectorised-CPU acceleration}
+
+The CUDACPP plugin for \mgfive~\cite{Valassi:2025xfn} achieves
+$100\times$--$1000\times$ speedup over single-threaded Fortran on NVIDIA V100
+GPUs for processes such as $\gluglu\to\ttbar\gluglu\gluglu$.  CPU vector
+implementations (AVX2/AVX-512) deliver up to $16\times$ on a single core.
+These results establish the performance target against which the AIE
+architecture is compared in Section~\ref{sec:results}.
+
+\subsection{Prior FPGA acceleration work}
+
+Barbone et al.~\cite{Carrazza:2021gpx} demonstrated ${\sim}100\times$ CPU
+speedup for $e^+e^-\to\mu^+\mu^-$ on a Xilinx Alveo using HLS-generated
+circuits.  Barbone et al.~\cite{Barbone:2023mul} subsequently extended this to
+the Versal platform, combining PL HLS kernels, VHDL datapaths, and \aie
+kernels for the same two-body process.  Our work differs in two key respects:
+(i)~we target a significantly more complex hadronic process (\ggttg with 16
+diagrams vs.\ 1--2 for $e^+e^-\to\mu^+\mu^-$), and (ii)~we identify PM
+constraints as the primary architectural driver, motivating a multi-tile
+cascade pipeline rather than a single-core solution.

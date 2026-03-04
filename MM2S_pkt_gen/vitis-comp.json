@@ -1,0 +1,11 @@
+{
+  "name": "MM2S_pkt_gen",
+  "type": "HLS",
+  "configuration": {
+    "componentType": "HLS",
+    "configFiles": [
+      "hls_config.cfg"
+    ],
+    "work_dir": "MM2S_pkt_gen"
+  }
+}

@@ -1,0 +1,70 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{graphicx}
+\usepackage{authblk}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{xspace}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\input{commands}
+
+\title{\textbf{Accelerating Monte Carlo Event Generation using Hardware Acceleration Platforms}} 
+
+\author[1]{J. Fern\'andez Men\'endez}
+\author[2]{L. Fiorini}
+\author[1]{S. Folgueras}
+\author[2]{F. Herv\'as \'Alvarez}
+\author[2]{H. Guti\'errez Arance}
+\author[1]{P. Leguina L\'opez}
+\author[2]{A. Oyanguren}
+\author[2]{A. Valero}
+\author[3]{C. Vico Villalba}
+
+\affil[1]{Universidad de Oviedo - ICTEA}
+\affil[2]{Instituto de F\'isica Corpuscular (IFIC) - U. Valencia}
+\affil[3]{Rice University}
+
+
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We present a heterogeneous hardware approach to accelerate Monte Carlo event generation using the MadGraph5\_aMC@NLO generator. Targeting the matrix element and color matrix computation steps, we implement key components using High-Level Synthesis (HLS), VHDL, and AI Engine programming on an AMD Versal platform. Two benchmark processes---$e^+e^- \to \mu^+\mu^-$ and $pp \to t\bar{t} +$ jets---demonstrate performance gains and energy efficiency compared to conventional CPU and GPU implementations. The results showcase the scalability of FPGA acceleration for high-throughput and sustainable simulation workloads in high-energy physics.
+\end{abstract}
+
+\section{Introduction} \input{introduction}
+% Insert the introduction content here
+
+%The increasing complexity of HEP experiments, the growing volume of data, the improvement on the precision of the experimental measurements, and the progress on the theoretical calculations have placed significant demands on Monte Carlo (MC) simulations. The physics program of the Large Hadron Collider (LHC) experiments, require generating billions of events with an ever increasing need for more precise theoretical calculations, demanding significant processing time and resources. Traditional CPU-based computing platforms, while effective for many tasks, are facing limitations in terms of performance and scalability. 
+
+%To address these limitations, accelerating computing platforms, such as Graphics Processing Units (GPUs), Tensor Processing Units (TPUs), have emerged as promising solutions. These platforms offer significantly higher computational power and parallel processing capabilities compared to CPUs, making them well-suited for the demanding tasks involved in MC simulations.  Field Programmable Gate Arrays (FPGAs) are becoming increasingly popular, and thus ofgreatly increasing relevance in the context of High-Performance Computing (HPC). Recent advances in High-Level Synthesis (HLS) toolchains for customised hardware implementations greatly reduce the engineering effort needed to program FPGAs. As a consequence, the use of FPGA accelerators is quickly spreading from the HPC context to other disciplines that require processing large volumes of data or ultra-low latency response.  By leveraging the parallel architecture of these accelerators, it is possible to achieve significant performance improvements and reduce simulation times and cost.  
+
+%Monte Carlo simulations are widely utilised in the context of HEP, combined with their computational complexity they account for a large fraction of the total computational resources needed in HEP. In recent years, the increasing complexity of such simulations require significant computational time in order to accurately calculate the scattering amplitudes and matrix elements. In the last years the parallelisation of such calculations have been explored by frameworks such as \textit{MadFlow}\cite{Barbone:2023mul}, achieving great performance improvement while running on GPU. Some works has also been done demonstrating the possibility of achieving even better performance by using FPGAs. Barbone et al.\cite{Carrazza:2021gpx} demonstrate the use of FPGA acceleration by achieving an 100x speedup compared to multi-core CPU implementations. 
+
+\section{MadGraph5\_aMC@NLO as a benchmark for hardware acceleration}
+\input{mc_state-of-the-art}
+
+
+\section{Methodology} 
+\input{methodology}
+
+\section{Results}
+\input{results}
+
+\section{Conclusion}
+
+\section*{Acknowledgments}
+This work was supported by [Funding Source], under grant/project number [XXX]. The authors acknowledge the contributions of [collaborators or institutions].
+
+\bibliographystyle{unsrt}
+\bibliography{references}
+
+\end{document}
+
+
