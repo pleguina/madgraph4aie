@@ -127,6 +127,12 @@ logs/
 .DS_Store
 Thumbs.db
 
+# ── Excluded folders ─────────────────────────────────────────────────────────
+platform/
+paper/
+versal_test/
+daisy_chain_impl/
+
 # ── Excluded docs (kept on disk, not tracked) ───────────────────────────────
 docs/analysis/FFV1P0_3_OPTIMIZATION.md
 docs/analysis/FINE_GRAINED_PIPELINE_ANALYSIS.md
