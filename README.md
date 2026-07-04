@@ -2,7 +2,7 @@
 
 **80-pipeline implementation on AMD Versal VCK190 (VC1902)**
 
-Computes gg→tt̄g scattering matrix elements using a packet-switched AI Engine array with 5-kernel cascade pipelines. Achieves **912k PSP/s** aggregate throughput at **49 nJ/PSP** energy efficiency — 100× better than GPU and 920× better than CPU baselines.
+Computes gg→tt̄g scattering matrix elements using a packet-switched AI Engine array with 5-kernel cascade pipelines. Mapping 80 pipelines across the 400 AIE tiles of the VCK190 yields a **projected** throughput of **1.0×10⁶ matrix elements/s (ME/s)** at **54.8 µJ/ME** (AIE domain) — about **4.9× faster than a single AVX2 (fp32) CPU core** and **34× faster than a scalar fp64 core**, at ~8× lower energy per matrix element. (A GPU such as the NVIDIA A100 remains ~20× faster in raw throughput; the contribution here is a deterministic, fixed-function spatial architecture, not a GPU-beating throughput record.)
 
 ## Repository Map
 
@@ -108,9 +108,9 @@ See [docs/architecture/PAPER_ARCHITECTURE_FIGURES.md](docs/architecture/PAPER_AR
 
 | Metric | Value |
 |--------|-------|
-| Throughput | 912k PSP/s (80 pipelines) |
+| Throughput | 1.0×10⁶ ME/s (80 pipelines, projected under linear scaling) |
 | Latency | 80 µs per PSP (deterministic) |
-| Energy | 49 nJ/PSP |
+| Energy | 54.8 µJ/ME (AIE domain; 82.7 µJ/ME full chip) |
 | AIE Utilization | 100% (400/400 tiles) |
 | Accuracy (fp32) | ~1.4 ppm mean rel. error vs. MadGraph5 fp64 (max ~168 ppm in bulk; see [precision analysis](docs/validation/PRECISION_ANALYSIS.md)) |
 
