@@ -140,6 +140,76 @@ python scripts/compare_extreme_e5.py \
 python scripts/precision_compare_1000.py
 ```
 
+## Reproducing the CPU reference measurements
+
+The CPU rows of the paper's cross-platform comparison table (throughput, power,
+energy per matrix element) and the per-ME floating-point operation count are
+reproducible on any Intel host with Linux `perf`. Both scripts drive the public
+MadGraph5 CUDACPP standalone (the same benchmark the paper cites), so nothing
+device-specific is required.
+
+```bash
+# --- Throughput + RAPL energy (Table CPU rows: fp64/fp32 scalar, fp32 AVX2 1c/6c)
+#     Requires a built CUDACPP gg_ttg.sa checkout (see the script header):
+#       git clone https://github.com/madgraph5/madgraph4gpu.git
+#       cd .../gg_ttg.sa/SubProcesses/P1_Sigma_sm_gg_ttxg
+#       make -f ../cudacpp.mk BACKEND=cppnone FPTYPE=d USEBUILDDIR=1
+#       make -f ../cudacpp.mk BACKEND=cppnone FPTYPE=f USEBUILDDIR=1
+#       make -f ../cudacpp.mk BACKEND=cppavx2 FPTYPE=f USEBUILDDIR=1
+PROC_DIR=/path/to/P1_Sigma_sm_gg_ttxg ./scripts/bench_cpu_reference.sh
+#   Prints ME/s (MECalcOnly), avg package power, and E/ME per configuration.
+#   E/ME = avg RAPL package power / MECalcOnly throughput (paper convention).
+#   RAPL package energy is socket-wide, so the fully-loaded 6-core row is the
+#   representative vectorised-CPU energy point.
+
+# --- FLOP per matrix element (~1.85e5 FLOP/ME, 98% scalar)
+#     Requires a MadGraph5 standalone export of "g g > t t~ g" (see script header).
+#     Copies scripts/flops_probe.cpp into the process dir, builds a scalar/no-FMA
+#     probe, and differences perf fp_arith_inst_retired counts over two run lengths.
+PROC_DIR=/path/to/ggttg_sa/SubProcesses/P1_Sigma_sm_gg_ttxg ./scripts/measure_cpu_flops.sh
+#   Also prints the ME value, which must reproduce the fp64 golden
+#   2.0931907741e-04 GeV^-2 at the reference point (correctness check).
+```
+
+Perf may require `sudo sysctl kernel.perf_event_paranoid=0`. Raw measurement
+logs live in the paper's `docs/metrics/` (`CPU_fp32_vectorized_i5-10600.txt`,
+`CPU_flops_per_ME_i5-10600.txt`).
+
+## Estimating AI Engine power without hardware
+
+The AI-Engine power figure is an **estimate computed entirely on the host** — the
+VCK190 board is never needed. The flow is:
+
+1. **Activity file (`.xpe`) from the compiler / simulator.** The AI Engine
+   compiler emits `Work/reports/<design>.xpe`, an XML *activity* descriptor:
+   per-tile integer/float core load, memory banks, `mem_rw_rate`, and
+   `stream_util`, plus the array clock (e.g. `clk_freq="1250"` MHz). It contains
+   **activity factors, not watts.** Running the `aiesimulator` (once the PLIO
+   deadlock fix in `docs/troubleshooting/` lets it complete) refines these
+   activity factors from the actual simulated switching, giving a more accurate
+   `.xpe` than the compiler's default estimate.
+
+2. **Scale one pipeline to the full array.** A single five-tile pipeline maps to
+   ~22 tiles; the 80-pipeline deployment fills all 400 compute tiles. Rather than
+   simulate all 80, replicate one pipeline's activity across the array:
+
+   ```bash
+   python scripts/replicate_xpe_power.py <one_pipeline.xpe> <400core_approx.xpe>
+   ```
+
+3. **Convert activity → watts (hardware-free).** Import the `.xpe` into **AMD
+   Power Design Manager (PDM)** / the **Xilinx Power Estimator (XPE)**, or run
+   Vivado `report_power` with the activity applied. These tools hold the
+   `xcvc1902` silicon power model and turn the per-tile activity factors into an
+   AI-Engine-domain wattage. This is where the reported AI Engine domain power
+   comes from — no board, only the AMD power model.
+
+So a new power estimate **can** be produced without the device: regenerate the
+`.xpe` from an `aiesimulator` run, (optionally) replicate it to 400 cores, and
+re-import it into PDM/XPE/`report_power`. The only piece that cannot be done from
+this repo alone is the final activity→watts conversion, which requires the AMD
+power tool (PDM/XPE) rather than the physical VCK190.
+
 ## Directory Structure
 
 - `alternatives/` - Alternative graph configurations (multilane, max_throughput)
