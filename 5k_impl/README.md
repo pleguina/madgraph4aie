@@ -48,6 +48,12 @@ make aiesim  # AIE simulator
 make x86sim  # Fast x86 simulation (functional verification)
 ```
 
+> **If the cycle-accurate `aiesim` appears to hang / never stops:** this is a known
+> PLIO input-starvation deadlock caused by a build recipe overwriting the
+> auto-generated `scsim_config.json` and dropping its `libpl_sender`/`libpl_receiver`
+> drivers. See [docs/troubleshooting/AIESIM_PLIO_DEADLOCK_FIX.md](../docs/troubleshooting/AIESIM_PLIO_DEADLOCK_FIX.md).
+> The fix helper is `scripts/gen_scsim_config.py`.
+
 ## Verified Output
 
 - **x86sim**: 0.00020931918698 (reference)

@@ -33,3 +33,7 @@
 
 - [PRECISION_ANALYSIS.md](validation/PRECISION_ANALYSIS.md) — AIE vs MadGraph5 precision comparison
 - [TESTING_BEFORE_DEPLOYMENT.md](validation/TESTING_BEFORE_DEPLOYMENT.md) — Pre-deployment test procedures
+
+### Troubleshooting
+
+- [AIESIM_PLIO_DEADLOCK_FIX.md](troubleshooting/AIESIM_PLIO_DEADLOCK_FIX.md) — Why the cycle-accurate AIE sim appears to hang (build recipe overwriting `scsim_config.json` and stripping PLIO drivers → input starvation) and how to run it to completion

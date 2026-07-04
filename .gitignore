@@ -149,6 +149,7 @@ docs/benchmarking/MAX_THROUGHPUT_ANALYSIS.md
 docs/benchmarking/OPTIMIZATION_REPORT.md
 docs/deploy/DEPLOYMENT_READY.md
 docs/reference/
-docs/troubleshooting/
+docs/troubleshooting/*
+!docs/troubleshooting/AIESIM_PLIO_DEADLOCK_FIX.md
 docs/validation/5K_SPLIT_PHYSICS_VERIFICATION.md
 docs/validation/PHYSICS_ANALYSIS.md
