@@ -214,13 +214,60 @@ where ME² is the squared matrix element for a given phase space point.
 
 ---
 
+## Extreme-Region Precision Study (Soft/Collinear Stress Test)
+
+The 1000-point sample above is drawn from a **flat RAMBO** distribution and is
+therefore dominated by generic hard kinematics. To probe the regions where
+float32 is most vulnerable to catastrophic cancellation — the soft and collinear
+tails, where individual Feynman diagrams diverge and the gauge-invariant sum
+proceeds through large cancellations — a targeted stress test was run.
+
+**Method.** From a pool of 2 × 10⁵ flat RAMBO points at √s = 1.5 TeV we selected:
+- the **400 softest** final-state-gluon configurations (gluon energy E_g ≤ 30.8 GeV, i.e. below 4% of the beam energy), and
+- the **396 most collinear** configurations (minimum opening angle between the final gluon and a beam or heavy-quark direction below 3.1°),
+
+giving **796 unique extreme points**. (A high-invariant-mass category was also
+requested; at fixed √s the highest m(tt̄) events are kinematically degenerate
+with the soft limit, so they fold into the soft set.) Each point was recomputed
+in float32 through the same 5-kernel x86 pipeline and compared against the fp64
+MadGraph golden.
+
+**Results (relative error).**
+
+| Region | n | median | p99 | worst-case |
+|--------|---|--------|-----|------------|
+| SOFT | 400 | 5.7 ppm | 490 ppm | 3.4 % |
+| COLLINEAR | 396 | 10.9 ppm | 1584 ppm | 2.4 % |
+| Bulk (flat 1000, for contrast) | 1000 | 0.91 ppm | 6.3 ppm | 168 ppm |
+
+**Interpretation.** The median relative error remains at the single-digit-ppm
+level even in the extreme tails — only marginally above the bulk sample — while
+the deepest infrared corners degrade to a few percent, exactly the expected
+float32 catastrophic-cancellation behaviour. Those few-percent excursions occur
+only where the amplitude is dominated by near-cancelling divergent contributions
+and where the fixed-order prediction is itself unphysical; such regions are
+removed by the phase-space generation cuts applied in any realistic
+cross-section calculation. Applications that must retain the deep-infrared region
+can reprocess the affected points in float64 or mixed precision on the host.
+
+**Reproduce.** See the "Reproducing the precision studies" section of
+`5k_impl/README.md`. Scripts: `scripts/select_extreme_e5.py` (tail selection) and
+`scripts/compare_extreme_e5.py` (per-region comparison). Data:
+`data/psp_in_extreme796_fp32.txt` (PLIO input), `data/expected_me2_extreme796.txt`
+(fp64 golden), `data/aie_me2_extreme796_fp32.txt` (fp32 output), and
+`data/extreme796_labels.txt` (per-point region tags).
+
+---
+
 ## References
 
-1. MadGraph5 baseline data: `5k_impl/data/expected_me2_1000.txt`
-2. AIE simulation output: `5k_impl/build/x86sim/x86simulator_output/data/me2_out_0.txt`
-3. Analysis script: `5k_impl/scripts/compare_me2_precision.py`
-4. IEEE 754 Floating-Point Standard
-5. Particle Data Group - Monte Carlo Generators Review
+1. MadGraph5 baseline data (bulk): `5k_impl/data/expected_me2_1000.txt`
+2. AIE fp32 output (bulk): `5k_impl/data/aie_me2_1000_fp32.txt`; PLIO input: `5k_impl/data/psp_in_1000_fp32.txt`
+3. Bulk analysis scripts: `5k_impl/scripts/compare_me2_precision.py`, `5k_impl/scripts/precision_compare_1000.py`
+4. Extreme-region study: `5k_impl/scripts/{select_extreme_e5.py, compare_extreme_e5.py}`; data `5k_impl/data/*extreme796*`
+5. Golden generator (fp64 reference): `5k_impl/scripts/generate_test_data.cpp`
+6. IEEE 754 Floating-Point Standard
+7. Particle Data Group - Monte Carlo Generators Review
 
 ---
 

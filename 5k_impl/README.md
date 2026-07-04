@@ -53,6 +53,87 @@ make x86sim  # Fast x86 simulation (functional verification)
 - **x86sim**: 0.00020931918698 (reference)
 - **AIEsim**: 2.093191870e-04 (matches! ✓)
 
+## Reproducing the precision studies
+
+The AIE float32 pipeline is validated against an fp64 MadGraph golden. Two
+studies are reproducible from this directory: the **bulk** 1000-point flat-RAMBO
+comparison and the **extreme-region** soft/collinear stress test (796 points).
+See `docs/validation/PRECISION_ANALYSIS.md` for the numbers and interpretation.
+
+### 1. Generate the fp64 golden reference
+
+The golden generator source is `scripts/generate_test_data.cpp`. It is **not
+self-contained**: it must be built inside a MadGraph5 standalone C++ export of
+`g g > t t~ g`, which supplies `CPPProcess.{h,cc}`, `rambo.{h,cc}` and
+`libmodel_sm.a`.
+
+```bash
+# 1) Export the standalone process with MadGraph5 (once):
+#      mg5_aMC
+#      > generate g g > t t~ g
+#      > output standalone_cpp ggttg_sa
+# 2) Drop the generator into the process directory and build it:
+cp scripts/generate_test_data.cpp \
+   ggttg_sa/SubProcesses/P1_Sigma_sm_gg_ttxg/
+cd ggttg_sa/SubProcesses/P1_Sigma_sm_gg_ttxg/
+make generate_test_data
+# 3) Generate a large flat-RAMBO pool at sqrt(s)=1500 GeV:
+./generate_test_data -n 200000 -e 1500 -s 20260703 -o pool
+#   -> pool_momenta.txt  (E,px,py,pz for g1,g2,t,tbar,g3)
+#   -> pool_results.txt  ("evt  ME2  weight")
+#   -> pool_momenta.bin
+```
+
+Particle order is `0=g1(+z), 1=g2(-z), 2=t, 3=tbar, 4=g3`. CLI options:
+`-n <events> -s <seed> -e <energyGeV> -o <prefix>`.
+
+### 2. Select the extreme (soft/collinear) points
+
+```bash
+python scripts/select_extreme_e5.py \
+    --prefix pool --per_region 400 --out data/extreme796
+#   -> data/extreme796_momenta.txt   (renumbered MadGraph momenta)
+#   -> data/extreme796_golden.txt    (index me2 weight, fp64)
+#   -> data/extreme796_labels.txt    (index region observable)
+```
+
+Pre-generated copies of these files are already committed under `data/`
+(`extreme796_momenta.txt`, `expected_me2_extreme796.txt`, `extreme796_labels.txt`).
+
+### 3. Convert momenta to the PLIO input stream
+
+The AIE input is one float per line, 20 floats per phase-space point,
+PSP-major `E,px,py,pz` for `g1,g2,t,tbar,g3`:
+
+```bash
+awk '!/^#/ && NF==5 {print $2; print $3; print $4; print $5}' \
+    data/extreme796_momenta.txt > data/psp_in_extreme796_fp32.txt
+```
+
+### 4. Run the x86 simulation over all points
+
+`src/graph_5k_split.cpp` runs `GGTTG_NUM_ITER` iterations (default 1). Point the
+graph at the PLIO input and set the iteration count to the number of points:
+
+```bash
+# copy the extreme input to the graph's expected input path, then:
+make x86run GRAPH_IMPL=5k_split CXXFLAGS="-DGGTTG_NUM_ITER=796"
+#   -> x86simulator_output/data/me2_out_0.txt  (one fp32 ME2 per line)
+```
+
+### 5. Compare against the golden
+
+```bash
+# Extreme-region, per-region breakdown:
+python scripts/compare_extreme_e5.py \
+    --fp32   data/aie_me2_extreme796_fp32.txt \
+    --golden data/expected_me2_extreme796.txt \
+    --labels data/extreme796_labels.txt
+
+# Bulk 1000-point study:
+python scripts/precision_compare_1000.py
+```
+
 ## Directory Structure
 
 - `alternatives/` - Alternative graph configurations (multilane, max_throughput)

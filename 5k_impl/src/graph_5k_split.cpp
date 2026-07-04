@@ -33,6 +33,10 @@
 static constexpr int BATCH  = GGTTG_BATCH;
 static constexpr int NCORES = GGTTG_NCORES;
 
+#ifndef GGTTG_NUM_ITER
+#define GGTTG_NUM_ITER 1
+#endif
+
 using namespace ggttg;
 
 // Instantiate the 5-Kernel Split Graph
@@ -58,8 +62,8 @@ int main() {
     GRAPH_DEBUG_PRINT("Initializing graph...\n");
     ggttg_graph_5k_split.init();
 
-    GRAPH_DEBUG_PRINT("Running graph (1 iteration)...\n");
-    ggttg_graph_5k_split.run(1);
+    GRAPH_DEBUG_PRINT("Running graph (%d iteration(s))...\n", GGTTG_NUM_ITER);
+    ggttg_graph_5k_split.run(GGTTG_NUM_ITER);
 
     GRAPH_DEBUG_PRINT("Waiting for graph completion...\n");
 
