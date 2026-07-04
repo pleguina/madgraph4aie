@@ -483,10 +483,10 @@ int run(int argc, char* argv[]) {
     std::cout << "   Output bandwidth: " << output_bw_mbps << " MB/s" << std::endl;
     std::cout << "   Total bandwidth:  " << total_bw_mbps << " MB/s" << std::endl;
     std::cout << std::endl;
-    std::cout << " Power Estimation (@ 45W board power):" << std::endl;
+    std::cout << " Power Estimation (@ 54.8W AIE-domain power, Vivado report_power):" << std::endl;
     std::cout << std::setprecision(1);
-    std::cout << "   Energy/PSP:       " << (45.0 / throughput_psp_per_sec) * 1e9 << " nJ" << std::endl;
-    std::cout << "   Energy/iteration: " << (45.0 * metrics.get_avg_iteration_ms()) / 1000.0 << " J" << std::endl;
+    std::cout << "   Energy/PSP:       " << (54.8 / throughput_psp_per_sec) * 1e9 << " nJ" << std::endl;
+    std::cout << "   Energy/iteration: " << (54.8 * metrics.get_avg_iteration_ms()) / 1000.0 << " J" << std::endl;
     std::cout << "=============================================================================" << std::endl;
     
     // Save CSV if requested

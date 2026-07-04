@@ -1,0 +1,5 @@
+33:| Total On-Chip Power (W)  | 82.713       |
+36:| Dynamic (W)              | 68.981       |
+37:| Device Static (W)        | 13.733       |
+69:| AIE                      |    54.792 |        1 |       400 |            0.25 |
+214:|     ai_engine_0         |    54.827 |

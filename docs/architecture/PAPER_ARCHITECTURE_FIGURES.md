@@ -4,13 +4,27 @@
 
 ---
 
+> **⚠️ Numbers superseded (2026-07-04).** Some inline figures below are early
+> estimates. The authoritative, measured values are:
+> **throughput 1.0×10⁶ ME/s** (80-pipeline projection; 1.25×10⁴ ME/s per pipeline),
+> **AI-Engine power 54.8 W** / **chip 82.7 W** (Vivado `report_power`, confirmed from
+> the console — see [../analysis/SUSTAINED_TILE_OCCUPANCY_POWER.md](../analysis/SUSTAINED_TILE_OCCUPANCY_POWER.md)),
+> **energy 54.8 µJ/ME** (chip upper bound 82.7 µJ/ME). The AIE's distinguishing
+> characteristic is its **low absolute power envelope**, *not* an energy-per-ME
+> advantage: a fully-utilised fp32-AVX2 CPU socket (~31 µJ/ME) and an A100
+> (~7.3 µJ/ME) achieve lower energy per matrix element. Older "nJ/PSP",
+> "100× better than GPU" and "920× better than CPU" claims are **retracted**.
+> The paper (`sec_results_ieee.tex`, `sec_comparison_ieee.tex`) is authoritative.
+
+---
+
 ## Executive Summary
 
 This document presents a **packet-switched architecture** for computing gg→tt̄g matrix elements on AMD Versal VCK190, achieving:
 
-- **912k PSP/s aggregate throughput** (80 parallel pipelines)
+- **1.0×10⁶ ME/s aggregate throughput** (80 parallel pipelines, projected under linear scaling; 1.25×10⁴ ME/s per pipeline)
 - **80 µs fixed latency** per phase-space point (deterministic)
-- **49 nJ/PSP energy efficiency** (100× better than GPU, 920× better than CPU)
+- **54.8 µJ/ME energy** at 54.8 W AI-Engine domain power (82.7 µJ/ME on full-chip power)
 - **100% AIE array utilization** (400 tiles fully occupied)
 - **Bit-accurate physics** (< 1e-9 relative error vs. CPU baseline)
 
@@ -292,7 +306,7 @@ Even though Pipe 7 finishes first, output is deterministic!
 
 **Key Observation:** Latency remains constant at 80 µs regardless of pipeline count—demonstrates **deterministic fixed-function pipeline** behavior.
 
-**Figure 4 Caption:** *"Linear throughput scaling up to 80 pipelines (912k PSP/s). Fixed 80 µs latency independent of parallelism confirms deterministic pipeline execution. Bottleneck shifts from compute (1-40 pipes) to memory bandwidth (60-80 pipes), achieving 91% of DDR burst limit."*
+**Figure 4 Caption:** *"Linear throughput scaling up to 80 pipelines (1.0×10⁶ ME/s projected). Fixed 80 µs latency independent of parallelism confirms deterministic pipeline execution. The projection is compute-dominated (K4 colour reduction is the per-pipeline bottleneck at ~71.6 µs/ME)."*
 
 ---
 
@@ -302,7 +316,7 @@ Even though Pipe 7 finishes first, output is deterministic!
 
 | Platform | Processor | Clock | TDP | Memory | Cost |
 |----------|-----------|-------|-----|--------|------|
-| **Versal VCK190** | VC1902 AIE | 1 GHz AIE | 45W | 32 GB DDR4 | $2,000 |
+| **Versal VCK190** | VC1902 AIE | 1.25 GHz AIE | 54.8 W AIE / 82.7 W chip | 32 GB DDR4 | $2,000 |
 | **CPU Baseline** | Xeon Gold 6248R (48c) | 3.0 GHz | 180W | 256 GB DDR4 | $1,500 |
 | **GPU Baseline** | NVIDIA A100 (80GB) | 1.4 GHz | 250W | 80 GB HBM2e | $10,000 |
 
@@ -310,50 +324,49 @@ Even though Pipe 7 finishes first, output is deterministic!
 
 ![Placeholder for bar chart - 3 subplots]
 
-**A) Throughput (MPSP/s):**
+**A) Throughput (M ME/s):** *(CPU/GPU rows illustrative; see paper Table IV for measured i5-10600 / A100 values)*
 ```
-CPU:    ▏0.004 MPSP/s   (4k PSP/s, single-threaded MadGraph5)
-GPU:    ▏▏▏▏▏ 0.05 MPSP/s  (50k PSP/s, CUDA parallelization)
-Versal: ██████████████████ 0.912 MPSP/s  (912k PSP/s, 80 pipelines)
-        0.0              0.5              1.0 MPSP/s
+Versal: ██████████████████ 1.00 M ME/s  (1.0×10⁶ ME/s, 80 pipelines, projected)
+        0.0              0.5              1.0 M ME/s
 ```
 
-**B) Average Power (W):**
+**B) Average Power (W):** *(AIE domain; full VCK190 chip = 82.7 W)*
 ```
-Versal: ███████████ 45 W
-CPU:    ████████████████████████████████████ 180 W
-GPU:    ██████████████████████████████████████████████ 250 W
+Versal: █████████████ 54.8 W (AIE domain)
+GPU:    ██████████████████████████████████████ 159 W (A100, measured)
         0         50        100       150       200       250 W
 ```
 
-**C) Energy Efficiency (nJ/PSP) - **LOGARITHMIC SCALE**:**
+**C) Energy per matrix element (µJ/ME):** honest hierarchy (lower is better)
 ```
-Versal: ▏49 nJ/PSP        ← 100× better than GPU
-GPU:    ████▏5,000 nJ/PSP
-CPU:    ████████████████████████████████████████ 45,000 nJ/PSP
-        1       10      100     1k      10k     100k nJ/PSP (log scale)
+A100 (fp32):            ▏  7.3 µJ/ME   (best measured)
+CPU 6-core AVX2 (fp32): ▏▏ 31   µJ/ME
+Versal AIE (fp32):      ▏▏▏▏ 54.8 µJ/ME   ← this work
+CPU 1-core AVX2 (fp32): ▏▏▏▏▏ 72  µJ/ME
+CPU 1-core scalar fp64: ████████████████ 422 µJ/ME
 ```
+
+> **The AIE is not the energy-per-ME optimum.** A fully-utilised fp32-AVX2 CPU
+> socket (~31 µJ/ME) and an A100 (~7.3 µJ/ME) are lower. The AIE's distinguishing
+> characteristic is its **low absolute power envelope** (54.8 W AIE / 82.7 W chip
+> vs. 159 W for the A100) plus prototype headroom, not energy-per-ME.
 
 ### 5.3 Efficiency Metrics
 
-**PSP per Joule:**
-- Versal: **20.4 million PSP/Joule**
-- GPU: **200k PSP/Joule** (100× worse)
-- CPU: **22k PSP/Joule** (920× worse)
+**Energy per matrix element (µJ/ME, lower = better):**
+- A100 (fp32): **7.3** (best)
+- CPU 6-core AVX2 (fp32): **31**
+- Versal AIE (fp32): **54.8** (this work)
+- CPU 1-core scalar fp64: **422** (the AIE's 7.7× edge holds only vs. this scalar baseline)
 
-**Performance per Watt:**
-- Versal: **20,278 PSP/s/W**
-- GPU: **200 PSP/s/W**
-- CPU: **22 PSP/s/W**
-
-**Why is Versal so efficient?**
+**Why the AIE has a low absolute power envelope:**
 1. **No instruction fetch overhead**: Fixed-function pipeline (no I-cache misses)
 2. **No shared cache hierarchy**: Local tile memory (no coherency traffic)
 3. **Deterministic execution**: No branch mispredictions or speculation
 4. **Spatial compute**: Data flows through tiles (no register file pressure)
 5. **Vector units**: 512-bit SIMD (vs. GPU's 32-wide warps with divergence)
 
-**Figure 5 Caption:** *"Energy efficiency comparison for gg→tt̄g computation across CPU, GPU, and Versal platforms. Versal achieves 100× better energy efficiency than GPU and 920× better than CPU through fixed-function pipeline architecture, eliminating instruction fetch, cache hierarchy, and branch prediction overhead characteristic of von Neumann architectures."*
+**Figure 5 Caption:** *"Energy per matrix element for gg→tt̄g across CPU, GPU, and Versal. The AIE (54.8 µJ/ME) sits between a fully-utilised fp32-AVX2 CPU socket (~31 µJ/ME) and a single AVX2 core (~72 µJ/ME); an A100 (~7.3 µJ/ME) is lower still. The AIE's advantage is its low absolute power envelope (54.8 W AIE / 82.7 W chip), not energy per matrix element."*
 
 ---
 
@@ -483,13 +496,13 @@ Pipelined Batch (10 PSPs per trunk, 8 trunks):
 - **Y-axis**: Performance (GFLOP/s)
 
 **Ceilings:**
-1. **Memory Bandwidth Ceiling**: 73 MB/s @ 80 bytes/PSP → 912k PSP/s
+1. **Memory Bandwidth Ceiling**: DDR4 bandwidth is far above the per-PSP demand (80 bytes/PSP), so I/O is not the limiter at these rates
 2. **Compute Capacity Ceiling**: 400 tiles × 8 GFLOP/s/tile = 3.2 TFLOP/s
 
 **Current Design Point:**
-- Computational intensity: ~2000 FLOPs / 80 bytes = **25 FLOPs/Byte**
-- Performance: 912k PSP/s × 2000 FLOPs = **1.82 GFLOP/s**
-- **Status**: Memory-bandwidth-bound (well below compute ceiling)
+- Computational intensity: ~1.85×10⁵ FLOP / 80 bytes = **~2300 FLOPs/Byte**
+- Performance: 1.0×10⁶ ME/s × ~1.85×10⁵ FLOP = **~185 GFLOP/s**
+- **Status**: Compute-dominated (per paper Section on throughput/latency; K4 colour reduction is the per-pipeline bottleneck)
 
 **Implications:**
 - ✅ **Not compute-limited**: Could handle more complex diagrams
@@ -808,28 +821,31 @@ event1();  // Mark key computation points
 
 | Metric | Target | Achieved | Status |
 |--------|--------|----------|--------|
-| Throughput | >500k PSP/s | **912k PSP/s** | ✅ 182% |
+| Throughput | >500k ME/s | **1.0×10⁶ ME/s** (projected) | ✅ |
 | Latency | <100 µs | **80 µs** | ✅ Met |
-| Energy Efficiency | <500 nJ/PSP | **49 nJ/PSP** | ✅ 10× better |
+| Energy | — | **54.8 µJ/ME** (AIE domain) | — |
 | AIE Utilization | >80% | **100%** | ✅ Full |
 | Accuracy | <1e-6 rel error | **<1e-9** | ✅ 1000× better |
 | Pipeline Count | 80 | **80** | ✅ Met |
 
 ### 10.2 Comparison to State-of-the-Art
 
-**Previous Work (CPU/GPU)**:
-- MadGraph5 (CPU): 4k PSP/s, 180W → 45 µJ/PSP
-- CUDA Implementation (GPU): 50k PSP/s, 250W → 5 µJ/PSP
-- **This Work (Versal)**: 912k PSP/s, 45W → **49 nJ/PSP**
+**Reference points (energy per matrix element, µJ/ME; see paper Table IV)**:
+- CPU 1-core scalar fp64 (i5-10600): ~2.9×10⁴ ME/s → **422 µJ/ME**
+- CPU 6-core AVX2 fp32: ~1.2×10⁶ ME/s → **31 µJ/ME**
+- A100 (fp32): **7.3 µJ/ME**
+- **This Work (Versal AIE)**: 1.0×10⁶ ME/s, 54.8 W → **54.8 µJ/ME**
 
-**Speedup**:
-- vs. CPU: **228× faster, 920× more efficient**
-- vs. GPU: **18× faster, 100× more efficient**
+**Positioning** (honest):
+- The AIE's **7.7× energy edge holds only vs. the fp64 scalar CPU baseline** (422 µJ/ME).
+- A fully-utilised fp32-AVX2 CPU socket (31 µJ/ME) and an A100 (7.3 µJ/ME) achieve
+  **lower** energy per matrix element. The AIE's merit is its **low absolute power
+  envelope** (54.8 W AIE / 82.7 W chip) and prototype headroom, not energy-per-ME.
 
 ### 10.3 Limitations & Future Work
 
 **Current Limitations**:
-1. **Memory-bandwidth-bound**: Cannot exceed 912k PSP/s without DDR upgrade
+1. **Compute-dominated projection**: full-array throughput is a linear-scaling projection from a single measured pipeline (per paper), not an end-to-end hardware measurement
 2. **Fixed process**: gg→tt̄g only (would need recompilation for gg→tt̄H, etc.)
 3. **Single-precision**: 32-bit float sufficient for physics, but some precision loss
 
@@ -859,14 +875,14 @@ event1();  // Mark key computation points
 
 ## 11. Conclusions
 
-This work demonstrates that **packet-switched AI Engine architectures** can achieve unprecedented energy efficiency for complex scientific computations. By eliminating traditional von Neumann bottlenecks—instruction fetch, cache hierarchy, branch prediction—spatial compute architectures like AMD Versal enable **100× better energy efficiency** compared to GPU baselines.
+This work demonstrates that **packet-switched AI Engine architectures** can compute complex scientific workloads at a **low absolute power envelope** (54.8 W AI-Engine domain / 82.7 W chip). By eliminating traditional von Neumann bottlenecks—instruction fetch, cache hierarchy, branch prediction—spatial compute architectures like AMD Versal deliver deterministic, fixed-latency execution; their distinguishing merit here is power envelope and prototype headroom rather than an energy-per-matrix-element advantage over fully-utilised CPU/GPU baselines.
 
 **Key Technical Contributions**:
 1. **Native packet switching** for zero-overhead load balancing (pktsplit/pktmerge)
 2. **5-kernel cascade pipeline** with balanced stage latency (±20%)
 3. **Snake placement pattern** minimizing cascade wire length
 4. **Program memory fitting** through strategic kernel splitting
-5. **Full AIE utilization** (400/400 tiles) at 912k PSP/s
+5. **Full AIE utilization** (400/400 tiles) at 1.0×10⁶ ME/s (projected)
 
 **Validation**: Bit-accurate physics agreement with MadGraph5 (<1e-9 relative error) across all 80 pipelines confirms correctness of implementation.
 

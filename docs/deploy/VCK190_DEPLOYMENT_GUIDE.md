@@ -708,7 +708,7 @@ Trunk 0:
  PSPs processed:    80
  Execution time:    80.5 ms
  Throughput:        994 PSP/s
- Energy efficiency: 49 nJ/PSP (estimated @ 45W)
+ Energy efficiency: 54.8 µJ/ME (AIE domain @ 54.8 W)
 =============================================================================
 ```
 

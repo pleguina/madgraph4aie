@@ -80,7 +80,7 @@ Trunk 0:
  PSPs processed:    80
  Execution time:    80.5 ms
  Throughput:        994 PSP/s
- Energy efficiency: 49 nJ/PSP (estimated @ 45W)
+ Energy efficiency: 54.8 µJ/ME (AIE domain @ 54.8 W)
 =============================================================================
 ```
 
@@ -175,10 +175,10 @@ diff ../5k_impl/data/psp_in_0.txt /path/to/madgraph/test_data_momenta.txt
 
 ## Performance
 - **PSP Generation**: ~1M PSPs/second (CPU)
-- **Hardware Throughput**: 912k PSP/s (91% of DDR bandwidth limit)
+- **Hardware Throughput**: 1.0×10⁶ ME/s (80-pipeline projection; 1.25×10⁴ ME/s per pipeline)
 - **Latency**: 80 µs fixed (pipeline depth)
-- **Energy Efficiency**: 49 nJ/PSP (100× better than GPU)
-- **Power**: 45W total (AIE + PL + PS)
+- **Energy**: 54.8 µJ/ME (chip upper bound 82.7 µJ/ME) — see docs/analysis/SUSTAINED_TILE_OCCUPANCY_POWER.md
+- **Power**: 54.8 W AI-Engine domain, 82.7 W total chip (Vivado report_power)
 
 ## References
 - RAMBO paper: Nucl. Phys. B 268 (1986) 253-281
