@@ -112,7 +112,7 @@ See [docs/architecture/PAPER_ARCHITECTURE_FIGURES.md](docs/architecture/PAPER_AR
 | Latency | 80 µs per PSP (deterministic) |
 | Energy | 49 nJ/PSP |
 | AIE Utilization | 100% (400/400 tiles) |
-| Accuracy | < 1e-9 relative error vs. MadGraph5 |
+| Accuracy (fp32) | ~1.4 ppm mean rel. error vs. MadGraph5 fp64 (max ~168 ppm in bulk; see [precision analysis](docs/validation/PRECISION_ANALYSIS.md)) |
 
 ## Platform XSA
 
