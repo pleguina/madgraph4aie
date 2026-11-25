@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Minimal drop-in for `zip -r <archive> <dir>` using python3's zipfile module,
+# for compute nodes where the real `zip` binary isn't installed.
+set -euo pipefail
+
+recursive=0
+args=()
+for a in "$@"; do
+  case "$a" in
+    -r) recursive=1 ;;
+    -*) : ;; # ignore other flags we don't need
+    *) args+=("$a") ;;
+  esac
+done
+
+archive="${args[0]}"
+shift_targets=("${args[@]:1}")
+
+# Vitis's settings64.sh sets PYTHONPATH/PYTHONHOME for its own bundled Python
+# (3.8.3) -- inheriting those into the system's /usr/bin/python3 (3.9) makes it
+# unable to find even its own stdlib (encodings module). Clear them so the
+# system interpreter runs in a clean environment.
+unset PYTHONPATH PYTHONHOME 2>/dev/null || true
+
+exec /usr/bin/python3 - "$archive" "${shift_targets[@]}" <<'PYEOF'
+import sys, os, zipfile
+
+archive = sys.argv[1]
+targets = sys.argv[2:]
+
+zf = zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED)
+for t in targets:
+    if os.path.isdir(t):
+        for root, dirs, files in os.walk(t):
+            for f in files:
+                full = os.path.join(root, f)
+                zf.write(full, full)
+    else:
+        zf.write(t, t)
+zf.close()
+PYEOF

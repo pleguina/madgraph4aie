@@ -1,0 +1,68 @@
+# Sources only: no build outputs, simulation outputs, reports, figures or notes.
+
+# Documentation: only the READMEs are tracked
+*.md
+!/README.md
+!/reference_fp64/README.md
+
+# Vitis / Vivado / AIE build and simulation outputs
+build/
+Work*/
+_x/
+.Xil/
+.ipcache/
+aiesimulator_output/
+x86simulator_output/
+function_wdb_dir/
+trdata.aiesim/
+reports/
+results/
+*.log
+*.jou
+*.str
+*.rpt
+*.wdb
+*.vcd
+*.wcfg
+*.pb
+*.xpe
+*.aiesol
+*.xo
+*.xclbin
+*.xsa
+*.pdi
+*.dcp
+*.bit
+*.cdo
+libadf.a
+*.json
+slurm-*.out
+
+# Generated data
+batch8_impl/precision_validation/data/
+reference_fp64/gg_ttxg_sa/SubProcesses/P1_Sigma_sm_gg_ttxg/*.txt
+reference_fp64/gg_ttxg_sa/lib/
+reference_fp64/gg_ttxg_sa/SubProcesses/P1_Sigma_sm_gg_ttxg/gen_reference
+mgtools/
+
+# Figures and papers
+paper/
+figures/
+*.pdf
+*.png
+*.svg
+
+# Objects
+*.o
+*.d
+*.a
+*.so
+
+# Editors / OS / Python
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+__pycache__/
+*.pyc
